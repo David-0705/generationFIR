@@ -1,0 +1,5 @@
+/backend/.env
+/backend/node_modules
+bns_multi_label_model/
+/env/
+node_modules/

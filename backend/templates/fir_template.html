@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FIR Report</title>
+  <style>
+    body { font-family: 'Noto Sans', Arial, sans-serif; margin: 0; padding: 0; }
+    .fir-container { max-width: 800px; margin: 0 auto; background: #fff; padding: 32px; border: 1px solid #ccc; }
+    h1, h2, h3 { text-align: center; margin: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #333; padding: 6px 8px; font-size: 14px; }
+    .section-title { background: #f0f0f0; font-weight: bold; padding: 8px; margin-top: 24px; }
+    .label { font-weight: bold; }
+    .row { display: flex; margin-bottom: 8px; }
+    .col { flex: 1; padding: 0 8px; }
+    .small { font-size: 12px; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="fir-container">
+    <h2>N.C.R.B (एन.सी.आर.बी)</h2>
+    <h1>I.I.F.-I (एफआईआर अंडर सेक्शन 173 बी.एन.एस)</h1>
+    <h3>FIRST INFORMATION REPORT</h3>
+    <div class="section-title">1. District / P.S. / Year / FIR No. / Date & Time</div>
+    <div class="row">
+      <div class="col label">District:</div>
+      <div class="col">{{district}}</div>
+      <div class="col label">P.S.:</div>
+      <div class="col">{{policeStation}}</div>
+      <div class="col label">Year:</div>
+      <div class="col">{{year}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">FIR No.:</div>
+      <div class="col">{{firNo}}</div>
+      <div class="col label">Date & Time:</div>
+      <div class="col">{{firDate}} {{firTime}}</div>
+    </div>
+    <div class="section-title">2. Acts / Sections</div>
+    <table>
+      <tr><th>S.No.</th><th>Acts</th><th>Sections</th></tr>
+      {{sections}}
+    </table>
+    <div class="section-title">3. Occurrence of Offence</div>
+    <div class="row">
+      <div class="col label">Day:</div>
+      <div class="col">{{occurrenceDay}}</div>
+      <div class="col label">Date From:</div>
+      <div class="col">{{occurrenceDateFrom}}</div>
+      <div class="col label">Date To:</div>
+      <div class="col">{{occurrenceDateTo}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">Time Period:</div>
+      <div class="col">{{occurrenceTimePeriod}}</div>
+      <div class="col label">Time From:</div>
+      <div class="col">{{occurrenceTimeFrom}}</div>
+      <div class="col label">Time To:</div>
+      <div class="col">{{occurrenceTimeTo}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">Info Received Date:</div>
+      <div class="col">{{infoReceivedDate}}</div>
+      <div class="col label">Info Received Time:</div>
+      <div class="col">{{infoReceivedTime}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">GD Entry No.:</div>
+      <div class="col">{{gdEntryNo}}</div>
+      <div class="col label">GD DateTime:</div>
+      <div class="col">{{gdDateTime}}</div>
+    </div>
+    <div class="section-title">4. Type of Information</div>
+    <div class="row">
+      <div class="col label">Type:</div>
+      <div class="col">{{typeOfInfo}}</div>
+    </div>
+    <div class="section-title">5. Place of Occurrence</div>
+    <div class="row">
+      <div class="col label">Direction & Distance:</div>
+      <div class="col">{{directionDistanceFromPS}}</div>
+      <div class="col label">Address:</div>
+      <div class="col">{{address}}</div>
+      <div class="col label">District/State:</div>
+      <div class="col">{{districtState}}</div>
+    </div>
+    <div class="section-title">Complainant / Informant</div>
+    <div class="row">
+      <div class="col label">Name:</div>
+      <div class="col">{{complainantName}}</div>
+      <div class="col label">Father/Husband Name:</div>
+      <div class="col">{{complainantFatherOrHusbandName}}</div>
+      <div class="col label">DOB:</div>
+      <div class="col">{{complainantDOB}}</div>
+      <div class="col label">Nationality:</div>
+      <div class="col">{{complainantNationality}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">UID No.:</div>
+      <div class="col">{{complainantUIDNo}}</div>
+      <div class="col label">Passport No.:</div>
+      <div class="col">{{complainantPassportNo}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">Occupation:</div>
+      <div class="col">{{complainantOccupation}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">Current Address:</div>
+      <div class="col">{{complainantCurrentAddress}}</div>
+      <div class="col label">Permanent Address:</div>
+      <div class="col">{{complainantPermanentAddress}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">Phone:</div>
+      <div class="col">{{complainantPhone}}</div>
+      <div class="col label">Mobile:</div>
+      <div class="col">{{complainantMobile}}</div>
+    </div>
+    <div class="section-title">Accused</div>
+    <div>{{accusedList}}</div>
+    <div class="section-title">Other Details</div>
+    <div class="row">
+      <div class="col label">Total Value of Property:</div>
+      <div class="col">{{totalValueOfProperty}}</div>
+    </div>
+    <div class="row">
+      <div class="col label">First Information Contents:</div>
+      <div class="col">{{firstInformationContents}}</div>
+    </div>
+  </div>
+</body>
+</html>
