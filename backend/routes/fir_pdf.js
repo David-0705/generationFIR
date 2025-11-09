@@ -145,14 +145,22 @@ const { generateFirPdfHtml } = require("../utils/fir_pdf_html");
 router.get("/:id/pdf_html", async (req, res) => {
   try {
     const fir = await Fir.findById(req.params.id);
-    if (!fir) return res.status(404).send("FIR not found");
+    if (!fir) {
+      console.error(`[PDF] FIR not found for id: ${req.params.id}`);
+      return res.status(404).send("FIR not found");
+    }
     // Generate PDF using HTML template and Puppeteer
-    const pdfBuffer = await generateFirPdfHtml(fir);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename=fir_${fir._id}.pdf`);
-    res.send(pdfBuffer);
+    try {
+      const pdfBuffer = await generateFirPdfHtml(fir);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename=fir_${fir._id}.pdf`);
+      res.send(pdfBuffer);
+    } catch (pdfErr) {
+      console.error(`[PDF] Error in generateFirPdfHtml:`, pdfErr);
+      res.status(500).send(`Error generating FIR PDF (HTML): ${pdfErr.message || pdfErr}`);
+    }
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error generating FIR PDF (HTML)");
+    console.error(`[PDF] Route error:`, err);
+    res.status(500).send(`Error generating FIR PDF (HTML): ${err.message || err}`);
   }
 });

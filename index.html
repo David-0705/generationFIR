@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DigiLocker Aadhaar Verification (Firebase)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8fafc;
+      padding: 40px;
+      color: #111827;
+    }
+    .container {
+      max-width: 450px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1d4ed8;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    button:hover {
+      background: #1e40af;
+    }
+    .card {
+      background: #eff6ff;
+      padding: 15px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>DigiLocker Aadhaar Verification (Firebase)</h1>
+
+    <!-- Step 1 -->
+    <div id="step1">
+      <p>Enter Aadhaar or Mobile number:</p>
+      <input id="aadhaarInput" placeholder="XXXX-XXXX-XXXX or 9876543210">
+      <button onclick="sendOTP()">Send OTP</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="otp-section" style="display:none;">
+      <p>Enter the OTP (check alert):</p>
+      <input id="otpInput" maxlength="6" placeholder="6-digit OTP">
+      <button onclick="verifyOTP()">Verify OTP</button>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="result-section" style="display:none;">
+      <h3>Verification Successful ✅</h3>
+      <div class="card">
+        <p><strong>Name:</strong> Verified User</p>
+        <p><strong>Gender:</strong> Male</p>
+        <p><strong>Verified Aadhaar/Mobile:</strong> <span id="displayNumber"></span></p>
+        <p><strong>Verification Time:</strong> <span id="timestamp"></span></p>
+        <p style="color:#64748b;">Source: Firebase Realtime DB Simulation</p>
+      </div>
+      <button onclick="resetApp()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- ✅ Firebase SDKs (Compat version — works in HTML directly) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // ✅ Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCk2o6QwJxmmC9tvoyk37DkGz_JFa8I_PA",
+      authDomain: "aadhaar-simulator.firebaseapp.com",
+      databaseURL: "https://aadhaar-simulator-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "aadhaar-simulator",
+      storageBucket: "aadhaar-simulator.appspot.com",
+      messagingSenderId: "433014150733",
+      appId: "1:433014150733:web:9cb2f7dc3c743ef1886e04"
+    };
+
+    // ✅ Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    console.log("✅ Firebase connected successfully");
+
+    let enteredAadhaar = "";
+
+    // --- Send OTP ---
+    function sendOTP() {
+      enteredAadhaar = document.getElementById('aadhaarInput').value.trim();
+      if (!enteredAadhaar) {
+        alert("Please enter your Aadhaar or mobile number.");
+        return;
+      }
+
+      // Generate random 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Save OTP in Firebase
+      database.ref('users/' + enteredAadhaar).set({
+        aadhaar: enteredAadhaar,
+        otp: otp,
+        verified: false,
+        timestamp: new Date().toISOString()
+      })
+      .then(() => {
+        alert(`Simulated OTP sent!\nYour OTP is: ${otp}`);
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('otp-section').style.display = 'block';
+      })
+      .catch((error) => {
+        alert("⚠️ Firebase write failed: " + error.message);
+      });
+    }
+
+    // --- Verify OTP ---
+    function verifyOTP() {
+      const enteredOtp = document.getElementById('otpInput').value.trim();
+
+      database.ref('users/' + enteredAadhaar).once('value')
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            if (data.otp === enteredOtp) {
+              // Update verified flag
+              database.ref('users/' + enteredAadhaar).update({ verified: true });
+
+              // Display verified info dynamically
+              document.getElementById('otp-section').style.display = 'none';
+              document.getElementById('result-section').style.display = 'block';
+              document.getElementById('displayNumber').innerText = enteredAadhaar;
+              document.getElementById('timestamp').innerText = new Date().toLocaleString();
+            } else {
+              alert("❌ Incorrect OTP. Try again!");
+            }
+          } else {
+            alert("No record found. Please resend OTP.");
+          }
+        })
+        .catch((error) => {
+          alert("⚠️ Firebase read failed: " + error.message);
+        });
+    }
+
+    // --- Reset the App ---
+    function resetApp() {
+      document.getElementById('aadhaarInput').value = '';
+      document.getElementById('otpInput').value = '';
+      document.getElementById('result-section').style.display = 'none';
+      document.getElementById('step1').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

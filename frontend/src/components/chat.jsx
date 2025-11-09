@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { saveFir, /* askLLM, */ getFirPdf } from "../api"; 
+import { saveFir, predictSection, getFirPdf /*, askLLM */ } from "../api"; 
 
 // Minimal FIR question list based on your provided content
 const QUESTIONS = [
@@ -208,21 +208,32 @@ function preparePayloadForSave(state) {
 }
 
 export default function ChatForm() {
-  // Section prediction handler
+  // Section prediction handler (enhanced)
   const handlePredictSection = async () => {
     setSectionPredictLoading(true);
     setSectionPredictResult("");
     setSectionPredictError("");
     try {
-      // Call backend API to predict section number
-      const resp = await fetch("/api/bns/predict-section", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstInformationContents: sectionPredictText })
-      });
-      if (!resp.ok) throw new Error("Prediction failed");
-      const data = await resp.json();
-      setSectionPredictResult(data.sections || "No section predicted");
+      // Use new API function
+      const data = await predictSection(sectionPredictText);
+      if (data.error) throw new Error(data.error);
+      // Show only section number and title, styled as a list
+      if (Array.isArray(data.sections) && data.sections.length > 0) {
+        setSectionPredictResult(
+          <div>
+            <strong>Predicted Section(s):</strong>
+            <ol style={{ marginTop: 8, marginBottom: 8 }}>
+              {data.sections.map((s, i) => (
+                <li key={i}>
+                  <span style={{ fontWeight: 500 }}>Section {s.section}:</span> {s.title}
+                </li>
+              ))}
+            </ol>
+          </div>
+        );
+      } else {
+        setSectionPredictResult("No section predicted");
+      }
     } catch (err) {
       setSectionPredictError("Prediction error: " + (err.message || "Unknown error"));
     }

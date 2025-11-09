@@ -9,9 +9,14 @@ router.post("/predict-section", async (req, res) => {
     return res.status(400).json({ error: "Missing or invalid firstInformationContents" });
   }
 
-  // Call Python script for prediction
-  const py = spawn("python", [
-    "../bns_multi_label_model/predict.py", // You will create this script next
+  // Call new Python script for prediction
+  // const py = spawn("python", [
+  //   "predictt.py",
+  //   text
+  // ]);
+
+  const py = spawn("C:\\Users\\david\\Code\\fir_chatbot_project\\env\\Scripts\\python.exe", [
+    "predictt.py",
     text
   ]);
 
@@ -25,10 +30,10 @@ router.post("/predict-section", async (req, res) => {
     error += data.toString();
   });
   py.on("close", (code) => {
-    if (code !== 0 || error) {
+    if (code !== 0) {
       return res.status(500).json({ error: error || "Prediction failed" });
     }
-    // Expect Python to print a JSON string: { "sections": "..." }
+    // If code is 0, ignore stderr and use stdout as result
     try {
       const parsed = JSON.parse(result);
       res.json(parsed);
