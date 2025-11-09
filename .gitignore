@@ -3,3 +3,5 @@
 bns_multi_label_model/
 /env/
 node_modules/
+backend/model
+citizen-justice-hub-main/
