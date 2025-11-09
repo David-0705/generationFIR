@@ -19,6 +19,8 @@ const firRoutes = require("./routes/fir");
 const firPdfRoutes = require("./routes/fir_pdf");
 const ollamaRoutes = require("./routes/ollama");
 const llmRoutes = require("./routes/llm");
+
+const nearestPoliceRoutes = require("./routes/nearest_police");
 const bnsPredictRoutes = require("./routes/bns_predict");
 
 
@@ -27,6 +29,8 @@ app.use("/api/fir", firRoutes);
 app.use("/api/fir", firPdfRoutes); // PDF route
 // app.use("/api/llm", llmRoutes);
 app.use("/api/llm", ollamaRoutes);
+
+app.use("/api/nearest-police", nearestPoliceRoutes);
 app.use("/api/bns", bnsPredictRoutes); // Section prediction route
 
 

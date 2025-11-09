@@ -1,5 +1,60 @@
 import React, { useEffect, useState, useRef } from "react";
-import { saveFir, predictSection, getFirPdf /*, askLLM */ } from "../api"; 
+import { saveFir, predictSection, getFirPdf, getNearestPoliceStation /*, askLLM */ } from "../api";
+
+// Nearest Police Station component
+function NearestPoliceStation() {
+  const [location, setLocation] = useState(null);
+  const [station, setStation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleDetect = () => {
+    setLoading(true);
+    setError("");
+    setStation(null);
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      setLoading(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLocation({ lat: latitude, lng: longitude });
+        getNearestPoliceStation(latitude, longitude)
+          .then(result => {
+            setStation(result);
+            setLoading(false);
+          })
+          .catch(err => {
+            setError("Could not find police station: " + (err?.response?.data?.error || err.message));
+            setLoading(false);
+          });
+      },
+      (err) => {
+        setError("Location error: " + err.message);
+        setLoading(false);
+      }
+    );
+  };
+
+  return (
+    <div className="nearest-police" style={{marginTop:24, padding:16, border:'1px solid #e6eef8', borderRadius:8, background:'#f8f9fb'}}>
+      <h3>Detect Nearest Police Station</h3>
+      <button className="button" onClick={handleDetect} disabled={loading} style={{marginTop:8}}>
+        {loading ? "Detecting..." : "Detect Nearest Police Station"}
+      </button>
+      {error && <div className="small" style={{marginTop:8, color:"red"}}>{error}</div>}
+      {station && (
+        <div className="small" style={{marginTop:8}}>
+          <b>Nearest Police Station:</b><br />
+          <span>{station.name}</span><br />
+          <span>{station.address}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Minimal FIR question list based on your provided content
 const QUESTIONS = [
@@ -466,6 +521,9 @@ export default function ChatForm() {
           )}
           {sectionPredictError && <div className="small" style={{marginTop:8, color:"red"}}>{sectionPredictError}</div>}
         </div>
+
+        {/* Nearest Police Station Detector */}
+        <NearestPoliceStation />
       </div>
 
       <div className="preview" style={{flex:1}}>
