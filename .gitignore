@@ -4,4 +4,5 @@ bns_multi_label_model/
 /env/
 node_modules/
 backend/model
-citizen-justice-hub-main/
+citizen-justice-hub-main/node_modules
+citizen-justice-hub-main/.env

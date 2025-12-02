@@ -1,0 +1,11 @@
+body { font-family: Inter, Arial, sans-serif; background:#f5f7fb; margin:0; padding:20px; }
+.app { max-width:900px; margin:0 auto; background:white; border-radius:12px; padding:18px; box-shadow:0 6px 24px rgba(10,20,40,0.08); }
+.header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.question-card { margin-top:18px; padding:12px; border-radius:10px; background:#fbfcff; border:1px solid #eef2ff; }
+.controls { display:flex; gap:8px; margin-top:10px; }
+.button { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#2563eb; color:white; }
+.button.secondary { background:#e6e9f7; color:#0f172a; }
+.progress { height:8px; background:#eef2f8; border-radius:999px; overflow:hidden; margin-top:12px; }
+.progress > div { height:100%; background:#10b981; width:0%; transition:width 300ms; }
+.small { font-size:13px; color:#475569; }
+.preview { margin-top:12px; background:#fff; border-radius:8px; padding:12px; border:1px dashed #e6eef8; }
