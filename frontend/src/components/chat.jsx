@@ -61,8 +61,6 @@ const QUESTIONS = [
   { key: "meta.district", label: "District (जिल्हा)", default: "Brihanmumbai City" },
   { key: "meta.policeStation", label: "P.S. (पोलीस ठाणे)", default: "Agripada" },
   { key: "meta.year", label: "Year (वर्ष)", default: 2025 },
-  { key: "meta.firNo", label: "FIR No. (प्रथम खबर क्र.)", default: "0498" },
-  { key: "meta.firDateTime", label: "Date and Time of FIR (प्र. ख. दिनांक आणि वेळ)", default: "2025-10-06T20:04:00" },
 
   // Occurrence
   { key: "occurrence.day", label: "Occurrence Day", default: "Monday" },
@@ -319,12 +317,30 @@ export default function ChatForm() {
     setState(s);
   }, []);
 
+  const [selectedLanguage, setSelectedLanguage] = useState("en-IN");
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [isPlayingConfirmation, setIsPlayingConfirmation] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // Language options for voice input
+  const languageOptions = [
+    { code: "en-IN", name: "English (India)" },
+    { code: "hi-IN", name: "Hindi (हिंदी)" },
+    { code: "mr-IN", name: "Marathi (मराठी)" },
+    { code: "gu-IN", name: "Gujarati (ગુજરાતી)" },
+    { code: "ta-IN", name: "Tamil (தமிழ்)" },
+    { code: "te-IN", name: "Telugu (తెలుగు)" },
+    { code: "kn-IN", name: "Kannada (ಕನ್ನಡ)" },
+    { code: "ml-IN", name: "Malayalam (മലയാളം)" },
+  ];
+
   useEffect(() => {
-    // init Web Speech API
+    // init Web Speech API with language support
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
-      rec.lang = "en-IN";
+      rec.lang = selectedLanguage;
       rec.interimResults = false;
       rec.maxAlternatives = 1;
       rec.onresult = (e) => {
@@ -344,7 +360,7 @@ export default function ChatForm() {
       recognitionRef.current = null;
       setStatus("SpeechRecognition not supported in this browser. Use typing.");
     }
-  }, []);
+  }, [selectedLanguage]);
 
   useEffect(() => {
     const p = Math.round(((index) / QUESTIONS.length) * 100);
@@ -357,9 +373,34 @@ export default function ChatForm() {
       return;
     }
     try {
-      recognitionRef.current.start();
-      setListening(true);
-      setStatus("Listening...");
+      // Reset audio
+      setAudioBlob(null);
+      audioChunksRef.current = [];
+      
+      // Start recording audio
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+          audioChunksRef.current = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunksRef.current.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+            setAudioBlob(blob);
+          };
+
+          mediaRecorder.start();
+          recognitionRef.current.start();
+          setListening(true);
+          setStatus("🎤 Recording & Listening in " + (languageOptions.find(l => l.code === selectedLanguage)?.name || selectedLanguage) + "...");
+        })
+        .catch((err) => {
+          setStatus("Microphone access denied: " + err.message);
+        });
     } catch (err) {
       console.error(err);
       setStatus("Error starting microphone: " + err.message);
@@ -368,7 +409,37 @@ export default function ChatForm() {
 
   const stopListening = () => {
     if (recognitionRef.current) recognitionRef.current.stop();
+    if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
     setListening(false);
+  };
+
+  const playbackConfirmation = () => {
+    if (!audioBlob) {
+      setStatus("No audio recorded");
+      return;
+    }
+    setIsPlayingConfirmation(true);
+    const audio = new Audio(URL.createObjectURL(audioBlob));
+    audio.onended = () => setIsPlayingConfirmation(false);
+    audio.play();
+  };
+
+  const confirmVoiceInput = () => {
+    if (!text.trim()) {
+      setStatus("No speech was recognized. Please try again.");
+      setAudioBlob(null);
+      return;
+    }
+    // Input confirmed - proceed with normal flow
+    setStatus("✓ Voice input confirmed: " + text);
+    setAudioBlob(null);
+    // Continue with submission or allow user to edit
+  };
+
+  const rejectVoiceInput = () => {
+    setText("");
+    setAudioBlob(null);
+    setStatus("Voice input rejected. Please try again.");
   };
 
   const handleSubmitAnswer = async () => {
@@ -461,6 +532,33 @@ export default function ChatForm() {
             <>
               <div className="small">Current value (from defaults / previous): {String(getAtPath(state, currentQ.key) ?? "")}</div>
 
+              {/* Language Selector for Voice Input */}
+              <div style={{marginTop:12, padding:10, background:'#f0f7ff', borderRadius:8}}>
+                <label style={{fontWeight: 'bold', fontSize: '12px', display: 'block', marginBottom: '6px'}}>
+                  Select Language for Voice Input:
+                </label>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: '1px solid #ccc',
+                    fontSize: '13px'
+                  }}
+                >
+                  {languageOptions.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="small" style={{marginTop: 6, color: '#555'}}>
+                  Current: {languageOptions.find(l => l.code === selectedLanguage)?.name}
+                </div>
+              </div>
+
               <div style={{marginTop:10}}>
                 <input
                   value={text}
@@ -468,14 +566,57 @@ export default function ChatForm() {
                   placeholder="Type your answer or press mic and speak"
                   style={{width:"100%", padding:10, borderRadius:8, border:"1px solid #e6eef8"}}
                 />
-                <div className="controls" style={{marginTop:8, display:'flex', gap:8}}>
+                <div className="controls" style={{marginTop:8, display:'flex', gap:8, flexWrap: 'wrap'}}>
                   <button className="button" onClick={listening ? stopListening : startListening}>
-                    {listening ? "Stop mic" : "Start mic"}
+                    {listening ? "⏹️ Stop Recording" : "🎤 Record & Recognize"}
                   </button>
-                  <button className="button secondary" onClick={handleSubmitAnswer}>Submit Answer</button>
+                  <button 
+                    className="button secondary" 
+                    onClick={handleSubmitAnswer}
+                    disabled={!text.trim()}
+                  >
+                    Submit Answer
+                  </button>
                   <button className="button secondary" onClick={handleSkip}>Skip</button>
                   <button className="button secondary" onClick={handleBack}>Back</button>
                 </div>
+
+                {/* Audio Playback Confirmation */}
+                {audioBlob && text && (
+                  <div style={{marginTop:12, padding:10, background:'#fff8e1', borderRadius:8, border:'1px solid #ffc107'}}>
+                    <div style={{fontWeight: 'bold', marginBottom: 8, fontSize: '12px'}}>
+                      📢 Voice Input Detected - Confirm?
+                    </div>
+                    <div style={{fontSize: '13px', marginBottom: 8, padding: 8, background: '#fff', borderRadius: 4}}>
+                      <strong>Recognized text:</strong> "{text}"
+                    </div>
+                    <div style={{display: 'flex', gap: 8}}>
+                      <button 
+                        className="button" 
+                        onClick={playbackConfirmation}
+                        disabled={isPlayingConfirmation}
+                        style={{flex: 1}}
+                      >
+                        {isPlayingConfirmation ? "🔊 Playing..." : "🔊 Play Recording"}
+                      </button>
+                      <button 
+                        className="button" 
+                        onClick={confirmVoiceInput}
+                        style={{flex: 1, background: '#28a745'}}
+                      >
+                        ✓ Confirm
+                      </button>
+                      <button 
+                        className="button" 
+                        onClick={rejectVoiceInput}
+                        style={{flex: 1, background: '#dc3545'}}
+                      >
+                        ✕ Reject
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="small" style={{marginTop:8}}>{status}</div>
               </div>
             </>
@@ -526,10 +667,10 @@ export default function ChatForm() {
         <NearestPoliceStation />
       </div>
 
-      <div className="preview" style={{flex:1}}>
+      {/* <div className="preview" style={{flex:1}}>
         <h3>Preview — Current FIR object (editable via steps)</h3>
         <pre style={{whiteSpace:"pre-wrap", fontSize:13, background:'#f8f9fb', padding:12, borderRadius:8}}>{JSON.stringify(state, null, 2)}</pre>
-      </div>
+      </div> */}
     </div>
   );
 }
