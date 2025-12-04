@@ -1,3 +1,136 @@
+# FIR Chatbot (Voice + Text) - Project
+
+This project contains a React frontend and an Express backend to collect FIR data
+by asking structured questions via text or browser speech recognition and saving
+the final FIR document to MongoDB.
+
+## Quick start (local)
+
+1. Start MongoDB (local or Atlas).
+2. Backend:
+   - `cd backend`
+   - `npm install`
+   - Copy `.env.example` to `.env` and set `MONGO_URI` (and optionally `OPENAI_API_KEY`).
+   - `npm run dev` (requires nodemon) or `node server.js`
+3. Frontend:
+   - `cd frontend`
+   - `npm install`
+   - `npm run dev`
+   - Open the Vite URL (e.g. http://localhost:5173)
+
+## Notes
+
+## FIR Chatbot Project
+
+This project is a full-stack web application designed to streamline the process of filing a First Information Report (FIR) in India. It leverages AI for section prediction, generates FIR PDFs, and helps users locate the nearest police station using geolocation and the Google Places API.
+
+## Features
+- **FIR Form:** Interactive, step-by-step FIR form for users to enter all required details.
+- **Section Prediction:** Uses a BERT-based model to predict relevant BNS sections from FIR content.
+- **PDF Generation:** Generates a downloadable PDF of the FIR using user inputs.
+- **Nearest Police Station Detection:** Finds the closest police station to the user's location using Google Places API.
+- **Modern UI:** Built with React for a responsive and user-friendly experience.
+- **Backend API:** Node.js/Express backend handles form submissions, prediction, PDF generation, and police station lookup.
+
+## Technologies Used
+- **Frontend:** React, JSX, CSS
+- **Backend:** Node.js, Express, Python (for ML model), MongoDB
+- **AI/ML:** BERT model for section prediction
+- **PDF:** HTML/LaTeX templates for PDF generation
+- **Geolocation:** Google Places API
+
+## Project Structure
+```
+fir_chatbot_project/
+├── backend/
+│   ├── server.js
+│   ├── routes/
+│   │   ├── fir.js
+│   │   ├── bns_predict.js
+│   │   ├── fir_pdf.js
+│   │   ├── nearest_police.js
+│   ├── models/
+│   ├── templates/
+│   ├── utils/
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── components/
+│   │   │   └── chat.jsx
+│   ├── index.html
+│   └── package.json
+├── bns_multi_label_model/
+│   └── (ML model files)
+├── env/
+│   └── (Python virtual environment)
+├── README.md
+└── .env
+```
+
+## How It Works
+1. **User fills FIR form** in the frontend (React).
+2. **Section prediction** is performed using a BERT model via backend API.
+3. **PDF generation** uses LaTeX/HTML templates to create a downloadable FIR PDF.
+4. **Nearest police station** is detected using user's geolocation and Google Places API.
+5. **All data** is stored in MongoDB for persistence.
+
+## Setup Instructions
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/David-0705/generationFIR.git
+   cd fir_chatbot_project
+   ```
+2. **Install backend dependencies:**
+   ```sh
+   cd backend
+   npm install
+   ```
+3. **Install frontend dependencies:**
+   ```sh
+   cd ../frontend
+   npm install
+   ```
+4. **Set up Python environment for ML model:**
+   ```sh
+   cd ../bns_multi_label_model
+   # Activate your Python environment and install required packages
+   ```
+5. **Configure environment variables:**
+   - Create a `.env` file in `backend/` and add your Google Places API key:
+     ```
+     GOOGLE_PLACES_API_KEY=your_actual_api_key_here
+     ```
+6. **Start backend server:**
+   ```sh
+   cd ../backend
+   node server.js
+   ```
+7. **Start frontend development server:**
+   ```sh
+   cd ../frontend
+   npm run dev
+   ```
+
+## API Endpoints
+- `POST /api/fir`: Save FIR data
+- `POST /api/bns/predict-section`: Predict BNS section
+- `GET /api/fir/:id/pdf_html`: Generate FIR PDF
+- `POST /api/nearest-police/nearest-police-station`: Find nearest police station
+
+## Environment Variables
+- `GOOGLE_PLACES_API_KEY`: Your Google Places API key for police station lookup
+
+## Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+## Author
+David-0705
+
+
+
+
 # FIR Chatbot Project - System Architecture
 
 ## 1. Project Overview

@@ -1,5 +1,73 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, createContext, useContext } from "react";
 import { saveFir, predictSection, getFirPdf, getNearestPoliceStation /*, askLLM */ } from "../api";
+
+// Navbar component
+// function Navbar({ theme, setTheme }) {
+//   return (
+//     <nav style={{
+//       background: theme === "dark" ? "#1a1d24" : "#fff",
+//       borderBottom: `1px solid ${theme === "dark" ? "#2c313a" : "#e6eef8"}`,
+//       padding: "0 20px",
+//       position: "sticky",
+//       top: 0,
+//       zIndex: 100,
+//       boxShadow: theme === "dark" ? "0 2px 8px rgba(0,0,0,0.3)" : "0 2px 8px rgba(0,0,0,0.05)",
+//       transition: "background 0.3s, border-color 0.3s"
+//     }}>
+//       <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", height: 64 }}>
+//         {/* Logo + Title */}
+//         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+//           <div style={{
+//             width: 32, height: 32, background: "linear-gradient(135deg, #1976d2, #0d47a1)",
+//             borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
+//             color: "#fff", fontWeight: 700, fontSize: 18
+//           }}>
+//             📋
+//           </div>
+//           <div>
+//             <div style={{ fontWeight: 700, fontSize: 18, color: theme === "dark" ? "#bfe0ff" : "#1976d2" }}>FIR System</div>
+//             <div style={{ fontSize: 12, color: theme === "dark" ? "#888" : "#999" }}>Digital Generation</div>
+//           </div>
+//         </div>
+
+//         {/* Nav Links */}
+//         <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
+//           <a href="#" style={{ textDecoration: "none", fontWeight: 500, color: theme === "dark" ? "#bfe0ff" : "#222", fontSize: 14 }}>Home</a>
+//           <a href="#" style={{ textDecoration: "none", fontWeight: 500, color: theme === "dark" ? "#bfe0ff" : "#222", fontSize: 14 }}>About</a>
+//           <a href="#" style={{ textDecoration: "none", fontWeight: 500, color: theme === "dark" ? "#bfe0ff" : "#222", fontSize: 14 }}>Contact</a>
+//         </div>
+
+//         {/* Theme Toggle + Auth */}
+//         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+//           <button
+//             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+//             style={{
+//               background: theme === "dark" ? "#23272f" : "#f0f7ff",
+//               color: theme === "dark" ? "#bfe0ff" : "#1976d2",
+//               border: "none", borderRadius: 8, padding: "8px 12px", fontWeight: 600,
+//               cursor: "pointer", fontSize: 13, transition: "all 0.2s"
+//             }}
+//           >
+//             {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+//           </button>
+//           <button style={{
+//             background: theme === "dark" ? "#e6e6e6" : "#f0f0f0",
+//             color: "#222", border: "none", borderRadius: 8, padding: "8px 16px",
+//             fontWeight: 600, cursor: "pointer", fontSize: 13
+//           }}>
+//             Login
+//           </button>
+//           <button style={{
+//             background: "#1976d2", color: "#fff", border: "none", borderRadius: 8,
+//             padding: "8px 16px", fontWeight: 600, cursor: "pointer", fontSize: 13
+//           }}>
+//             Register
+//           </button>
+//         </div>
+//       </div>
+//     </nav>
+//   );
+// }
 
 // Nearest Police Station component
 function NearestPoliceStation() {
@@ -39,7 +107,7 @@ function NearestPoliceStation() {
   };
 
   return (
-    <div className="nearest-police" style={{marginTop:24, padding:16, border:'1px solid #e6eef8', borderRadius:8, background:'#f8f9fb'}}>
+    <div className="nearest-police" style={{marginTop:24, padding:16, border:'1px solid #1e1f20ff', borderRadius:8, background:'#f8f9fb'}}>
       <h3>Detect Nearest Police Station</h3>
       <button className="button" onClick={handleDetect} disabled={loading} style={{marginTop:8}}>
         {loading ? "Detecting..." : "Detect Nearest Police Station"}
@@ -260,6 +328,15 @@ function preparePayloadForSave(state) {
   return p;
 }
 
+// Dark mode context
+const ThemeContext = createContext();
+
+function useTheme() {
+  return useContext(ThemeContext);
+}
+
+// Theme toggle integrated into Navbar component
+
 export default function ChatForm() {
   // Section prediction handler (enhanced)
   const handlePredictSection = async () => {
@@ -293,6 +370,36 @@ export default function ChatForm() {
     setSectionPredictLoading(false);
   };
   const [state, setState] = useState({});
+  // Theme state
+  const [theme, setTheme] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  useEffect(() => {
+    document.body.style.background = theme === "dark" ? "#181a1b" : "#f6f8fa";
+    document.body.style.color = theme === "dark" ? "#e6e6e6" : "#222";
+  }, [theme]);
+
+  // Inject responsive CSS once
+  useEffect(() => {
+    if (document.getElementById('chat-responsive-styles')) return;
+    const css = `
+      .chat-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 16px;
+      }
+      @media (max-width: 960px) {
+        .chat-grid { grid-template-columns: 1fr; padding: 0 12px; }
+      }
+      .chat-side { position: sticky; top: 20px; align-self: start; }
+      .preview-box { white-space: pre-wrap; font-size: 13px; padding: 12px; border-radius: 8px; }
+    `;
+    const style = document.createElement('style');
+    style.id = 'chat-responsive-styles';
+    style.appendChild(document.createTextNode(css));
+    document.head.appendChild(style);
+  }, []);
   const [index, setIndex] = useState(0);
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
@@ -303,6 +410,7 @@ export default function ChatForm() {
   const [sectionPredictResult, setSectionPredictResult] = useState("");
   const [sectionPredictLoading, setSectionPredictLoading] = useState(false);
   const [sectionPredictError, setSectionPredictError] = useState("");
+  const [previewHtml, setPreviewHtml] = useState("");
   const recognitionRef = useRef(null);
   const progressRef = useRef(null);
 
@@ -316,6 +424,41 @@ export default function ChatForm() {
     });
     setState(s);
   }, []);
+
+  // Build FIR HTML preview from state
+  function buildFirHtml(data) {
+    const safe = (p) => (p !== undefined && p !== null) ? String(p) : "";
+    const district = safe(getAtPath(data, 'meta.district')) || '---';
+    const ps = safe(getAtPath(data, 'meta.policeStation')) || '---';
+    const year = safe(getAtPath(data, 'meta.year')) || new Date().getFullYear();
+    const day = safe(getAtPath(data, 'occurrence.day'));
+    const dateFrom = safe(getAtPath(data, 'occurrence.dateFrom'));
+    const dateTo = safe(getAtPath(data, 'occurrence.dateTo'));
+    const timeFrom = safe(getAtPath(data, 'occurrence.timeFrom'));
+    const timeTo = safe(getAtPath(data, 'occurrence.timeTo'));
+    const infoDate = safe(getAtPath(data, 'occurrence.infoReceivedAtPS.date'));
+    const infoTime = safe(getAtPath(data, 'occurrence.infoReceivedAtPS.time'));
+    const typeOfInfo = safe(getAtPath(data, 'typeOfInfo'));
+    const direction = safe(getAtPath(data, 'placeOfOccurrence.directionDistanceFromPS'));
+    const address = safe(getAtPath(data, 'placeOfOccurrence.address'));
+    const complainant = safe(getAtPath(data, 'complainant.name'));
+    const currentAddress = safe(getAtPath(data, 'complainant.currentAddress'));
+    const permanentAddress = safe(getAtPath(data, 'complainant.permanentAddress'));
+    const totalValue = safe(data.totalValueOfProperty || getAtPath(data, 'totalValueOfProperty'));
+    const firstInfo = safe(getAtPath(data, 'firstInformationContents'));
+
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>FIR Preview</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial,Helvetica,sans-serif;color:#222;background:#fff;padding:18px} .fir-container{max-width:900px;margin:0 auto;border:1px solid #e6e6e6;padding:20px;border-radius:8px} h1,h2,h3{margin:6px 0} .section-title{background:#f6f9ff;padding:8px;border-radius:6px;margin-top:14px;font-weight:700} .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.col{flex:1;min-width:140px}.label{font-weight:700}.small{font-size:13px;color:#555}</style></head><body><div class="fir-container"><h2>N.C.R.B</h2><h1>FIRST INFORMATION REPORT</h1><div class="section-title">1. District / P.S. / Year</div><div class="row"><div class="col"><div class="label">District:</div><div>${district}</div></div><div class="col"><div class="label">P.S.:</div><div>${ps}</div></div><div class="col"><div class="label">Year:</div><div>${year}</div></div></div><div class="section-title">3. Occurrence of Offence</div><div class="row"><div class="col"><div class="label">Day:</div><div>${day}</div></div><div class="col"><div class="label">Date From:</div><div>${dateFrom}</div></div><div class="col"><div class="label">Date To:</div><div>${dateTo}</div></div></div><div class="row"><div class="col"><div class="label">Time From:</div><div>${timeFrom}</div></div><div class="col"><div class="label">Time To:</div><div>${timeTo}</div></div><div class="col"><div class="label">Info Received Date:</div><div>${infoDate}</div></div><div class="col"><div class="label">Info Received Time:</div><div>${infoTime}</div></div></div><div class="section-title">4. Type of Information</div><div class="row"><div class="col">${typeOfInfo}</div></div><div class="section-title">5. Place of Occurrence</div><div class="row"><div class="col"><div class="label">Direction & Distance:</div><div>${direction}</div></div><div class="col"><div class="label">Address:</div><div>${address}</div></div></div><div class="section-title">Complainant / Informant</div><div class="row"><div class="col"><div class="label">Name:</div><div>${complainant}</div></div><div class="col"><div class="label">Current Address:</div><div>${currentAddress}</div></div><div class="col"><div class="label">Permanent Address:</div><div>${permanentAddress}</div></div></div><div class="section-title">Other Details</div><div class="row"><div class="col"><div class="label">Total Value of Property:</div><div>${totalValue}</div></div></div><div class="row" style="margin-top:12px"><div class="col"><div class="label">First Information Contents:</div><div>${firstInfo}</div></div></div></div></body></html>`;
+  }
+
+  // Update preview when state changes
+  useEffect(() => {
+    try {
+      const html = buildFirHtml(state || {});
+      setPreviewHtml(html);
+    } catch (e) {
+      console.warn('Failed to build preview HTML', e);
+    }
+  }, [state]);
 
   const [selectedLanguage, setSelectedLanguage] = useState("en-IN");
   const [audioBlob, setAudioBlob] = useState(null);
@@ -523,154 +666,152 @@ export default function ChatForm() {
   const currentQ = QUESTIONS[index];
 
   return (
-    <div style={{display:'flex', gap:20}}>
-      <div style={{flex:1}}>
-        <div className="question-card" style={{padding:16, border:'1px solid #e6eef8', borderRadius:8}}>
-          <div className="small">Question {Math.min(index+1, QUESTIONS.length)} / {QUESTIONS.length}</div>
-          <h2>{currentQ ? currentQ.label : "All questions complete"}</h2>
-          {currentQ && (
-            <>
-              <div className="small">Current value (from defaults / previous): {String(getAtPath(state, currentQ.key) ?? "")}</div>
-
-              {/* Language Selector for Voice Input */}
-              <div style={{marginTop:12, padding:10, background:'#f0f7ff', borderRadius:8}}>
-                <label style={{fontWeight: 'bold', fontSize: '12px', display: 'block', marginBottom: '6px'}}>
-                  Select Language for Voice Input:
-                </label>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '6px',
-                    border: '1px solid #ccc',
-                    fontSize: '13px'
-                  }}
-                >
-                  {languageOptions.map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="small" style={{marginTop: 6, color: '#555'}}>
-                  Current: {languageOptions.find(l => l.code === selectedLanguage)?.name}
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+          background: theme === "dark" ? "#181a1b" : "#f6f8fa",
+          color: theme === "dark" ? "#e6e6e6" : "#222",
+          transition: "background 0.3s, color 0.3s"
+        }}
+      >
+        {/* <Navbar theme={theme} setTheme={setTheme} /> */}
+        <div style={{ padding: '28px 20px', maxWidth: '1400px', margin: '0 auto' }}>
+          <div className="chat-grid">
+            {/* Left: main form */}
+            <div style={{ padding: 12 }}>
+              <div style={{
+                width: '100%',
+                marginBottom: 18,
+                background: theme === "dark" ? "#23272f" : "#fff",
+                border: theme === "dark" ? "1px solid #2c313a" : "1px solid #e6eef8",
+                borderRadius: 14, boxShadow: theme === "dark" ? "0 2px 16px #0002" : "0 2px 16px #bfe0ff22",
+                padding: 20, position: 'relative', transition: "background 0.3s, border 0.3s"
+              }}>
+                <div className="small" style={{ fontSize: 13, color: theme === "dark" ? "#bfe0ff" : "#555" }}>
+                  Question {Math.min(index + 1, QUESTIONS.length)} / {QUESTIONS.length}
                 </div>
-              </div>
-
-              <div style={{marginTop:10}}>
-                <input
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type your answer or press mic and speak"
-                  style={{width:"100%", padding:10, borderRadius:8, border:"1px solid #e6eef8"}}
-                />
-                <div className="controls" style={{marginTop:8, display:'flex', gap:8, flexWrap: 'wrap'}}>
-                  <button className="button" onClick={listening ? stopListening : startListening}>
-                    {listening ? "⏹️ Stop Recording" : "🎤 Record & Recognize"}
-                  </button>
-                  <button 
-                    className="button secondary" 
-                    onClick={handleSubmitAnswer}
-                    disabled={!text.trim()}
-                  >
-                    Submit Answer
-                  </button>
-                  <button className="button secondary" onClick={handleSkip}>Skip</button>
-                  <button className="button secondary" onClick={handleBack}>Back</button>
-                </div>
-
-                {/* Audio Playback Confirmation */}
-                {audioBlob && text && (
-                  <div style={{marginTop:12, padding:10, background:'#fff8e1', borderRadius:8, border:'1px solid #ffc107'}}>
-                    <div style={{fontWeight: 'bold', marginBottom: 8, fontSize: '12px'}}>
-                      📢 Voice Input Detected - Confirm?
+                <h2 style={{ fontWeight: 700, fontSize: 22, margin: '12px 0 8px', color: theme === "dark" ? "#bfe0ff" : "#222" }}>
+                  {currentQ ? currentQ.label : "All questions complete"}
+                </h2>
+                {currentQ && (
+                  <>
+                    <div className="small" style={{ fontSize: 13, marginBottom: 8, color: theme === "dark" ? "#bfe0ff" : "#555" }}>
+                      Current value: {String(getAtPath(state, currentQ.key) ?? "")}
                     </div>
-                    <div style={{fontSize: '13px', marginBottom: 8, padding: 8, background: '#fff', borderRadius: 4}}>
-                      <strong>Recognized text:</strong> "{text}"
+                    {/* Language selector + input */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: 12, alignItems: 'start' }}>
+                      <div>
+                        <div style={{ marginTop: 6, marginBottom: 6 }}>
+                          <input
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            placeholder="Type your answer or press mic and speak"
+                            style={{
+                              width: "100%",
+                              padding: 12,
+                              borderRadius: 10,
+                              border: theme === "dark" ? "1px solid #444" : "1px solid #e6eef8",
+                              background: theme === "dark" ? "#23272f" : "#fff",
+                              color: theme === "dark" ? "#bfe0ff" : "#222",
+                              fontSize: 15,
+                              transition: "background 0.3s, color 0.3s"
+                            }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                          <button onClick={listening ? stopListening : startListening} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: listening ? (theme === 'dark' ? '#dc3545' : '#ffcdd2') : (theme === 'dark' ? '#bfe0ff' : '#1976d2'), color: listening ? '#fff' : (theme === 'dark' ? '#222' : '#fff'), fontWeight: 600, cursor: 'pointer' }}>{listening ? '⏹️ Stop' : '🎤 Record'}</button>
+                          <button onClick={handleSubmitAnswer} disabled={!text.trim()} style={{ padding: 10, borderRadius: 8, border: 'none', background: theme === 'dark' ? '#23272f' : '#e6eef8', color: theme === 'dark' ? '#bfe0ff' : '#1976d2', fontWeight: 600, cursor: !text.trim() ? 'not-allowed' : 'pointer' }}>Submit</button>
+                        </div>
+                      </div>
+                      <div>
+                        <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: theme === 'dark' ? '1px solid #444' : '1px solid #ccc', background: theme === 'dark' ? '#23272f' : '#fff', color: theme === 'dark' ? '#bfe0ff' : '#222' }}>
+                          {languageOptions.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                        </select>
+                        <div style={{ marginTop: 8, fontSize: 12, color: theme === 'dark' ? '#bfe0ff' : '#666' }}>{languageOptions.find(l => l.code === selectedLanguage)?.name}</div>
+                      </div>
                     </div>
-                    <div style={{display: 'flex', gap: 8}}>
-                      <button 
-                        className="button" 
-                        onClick={playbackConfirmation}
-                        disabled={isPlayingConfirmation}
-                        style={{flex: 1}}
-                      >
-                        {isPlayingConfirmation ? "🔊 Playing..." : "🔊 Play Recording"}
-                      </button>
-                      <button 
-                        className="button" 
-                        onClick={confirmVoiceInput}
-                        style={{flex: 1, background: '#28a745'}}
-                      >
-                        ✓ Confirm
-                      </button>
-                      <button 
-                        className="button" 
-                        onClick={rejectVoiceInput}
-                        style={{flex: 1, background: '#dc3545'}}
-                      >
-                        ✕ Reject
-                      </button>
+
+                    {/* confirmation panel */}
+                    {audioBlob && text && (
+                      <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: theme === 'dark' ? '#2c313a' : '#fff8e1', border: '1px solid #ffc107' }}>
+                        <div style={{ fontWeight: 700, marginBottom: 8 }}>📢 Voice Input Detected</div>
+                        <div style={{ marginBottom: 8, padding: 8, borderRadius: 6, background: theme === 'dark' ? '#23272f' : '#fff' }}>
+                          <strong>Recognized:</strong> {text}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={playbackConfirmation} disabled={isPlayingConfirmation} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: theme === 'dark' ? '#1976d2' : '#ffc107', color: theme === 'dark' ? '#fff' : '#222' }}>{isPlayingConfirmation ? '🔊 Playing' : '🔊 Play'}</button>
+                          <button onClick={confirmVoiceInput} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#28a745', color: '#fff' }}>Confirm</button>
+                          <button onClick={rejectVoiceInput} style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#dc3545', color: '#fff' }}>Reject</button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: 12, color: theme === 'dark' ? '#ffc107' : '#666' }}>{status}</div>
+                  </>
+                )}
+                {!currentQ && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ color: theme === 'dark' ? '#bfe0ff' : '#666' }}>All questions asked. Review and submit to DB.</div>
+                    <div style={{ marginTop: 12 }}>
+                      <button onClick={handleSave} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: theme === 'dark' ? '#28a745' : '#1976d2', color: '#fff', fontWeight: 700 }}>Save FIR</button>
                     </div>
                   </div>
                 )}
 
-                <div className="small" style={{marginTop:8}}>{status}</div>
+                <div className="progress" style={{ marginTop: 12, height: 8, background: theme === 'dark' ? '#23272f' : '#f0f4fb', borderRadius: 4 }}>
+                  <div ref={progressRef} style={{ width: `${Math.round((index / QUESTIONS.length) * 100)}%`, height: '100%', background: theme === 'dark' ? '#bfe0ff' : '#1976d2', borderRadius: 4, transition: 'width 0.3s' }} />
+                </div>
               </div>
-            </>
-          )}
 
-          {!currentQ && (
-            <div>
-              <div className="small">All questions asked. You can review below and submit to DB.</div>
-              <div className="controls" style={{marginTop:12}}>
-                <button className="button" onClick={handleSave}>Save to MongoDB</button>
+              <div>
+                <div style={{ padding: 12, borderRadius: 12, background: theme === 'dark' ? '#101214' : '#fff', border: theme === 'dark' ? '1px solid #222' : '1px solid #e6eef8' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: theme === 'dark' ? '#bfe0ff' : '#222' }}>Preview</div>
+                      <div>
+                        <button onClick={() => { const w = window.open(); w.document.write(previewHtml); w.document.close(); }} style={{ marginRight: 8, padding: '6px 10px', borderRadius: 8, background: theme === 'dark' ? '#1976d2' : '#1976d2', color: '#fff', border: 'none' }}>Open in new tab</button>
+                        <button onClick={() => { const blob = new Blob([previewHtml], { type: 'text/html' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'fir_preview.html'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }} style={{ padding: '6px 10px', borderRadius: 8, background: theme === 'dark' ? '#28a745' : '#28a745', color: '#fff', border: 'none' }}>Download HTML</button>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: theme === 'dark' ? '1px solid #1b1e22' : '1px solid #e9eef6' }}>
+                      <iframe title="FIR Preview" srcDoc={previewHtml} style={{ width: '100%', height: 340, border: 'none', display: 'block', background: '#fff' }} />
+                    </div>
+                  </div>
               </div>
             </div>
-          )}
 
-          <div className="progress" style={{marginTop:12, height:8, background:'#f0f4fb', borderRadius:4}}>
-            <div ref={progressRef} style={{width: `${Math.round((index/QUESTIONS.length)*100)}%`, height:'100%', background:'#bfe0ff', borderRadius:4}}></div>
+            {/* Right: side panel */}
+            <div className="chat-side" style={{ padding: 12 }}>
+              <div style={{ marginBottom: 18, borderRadius: 12 }}>
+                <div style={{ padding: 16, borderRadius: 12, background: theme === 'dark' ? '#23272f' : '#f8f9fb', border: theme === 'dark' ? '1px solid #2c313a' : '1px solid #e6eef8' }}>
+                  <h3 style={{ margin: 0, color: theme === 'dark' ? '#bfe0ff' : '#1976d2' }}>Download FIR PDF</h3>
+                  <div style={{ fontSize: 13, color: theme === 'dark' ? '#bfe0ff' : '#666', marginTop: 8 }}>Download the FIR PDF for the last saved FIR.</div>
+                  <button onClick={handleDownloadPdf} disabled={!firId} style={{ marginTop: 12, padding: 10, borderRadius: 8, border: 'none', background: theme === 'dark' ? '#1976d2' : '#28a745', color: '#fff', width: '100%' }}>{!firId ? 'Save FIR first' : 'Download/Print FIR PDF'}</button>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ padding: 16, borderRadius: 12, background: theme === 'dark' ? '#23272f' : '#f8f9fb', border: theme === 'dark' ? '1px solid #2c313a' : '1px solid #e6eef8' }}>
+                  <h3 style={{ margin: 0, color: theme === 'dark' ? '#bfe0ff' : '#1976d2' }}>Predict Section (BNS)</h3>
+                  <div style={{ fontSize: 13, color: theme === 'dark' ? '#bfe0ff' : '#666', marginTop: 8 }}>Enter FIR contents to predict BNS sections.</div>
+                  <input type="text" value={sectionPredictText} onChange={e => setSectionPredictText(e.target.value)} placeholder="First information contents" style={{ marginTop: 10, width: '100%', padding: 10, borderRadius: 8, border: theme === 'dark' ? '1px solid #444' : '1px solid #e6eef8', background: theme === 'dark' ? '#23272f' : '#fff', color: theme === 'dark' ? '#bfe0ff' : '#222' }} />
+                  <button onClick={handlePredictSection} disabled={!sectionPredictText.trim()} style={{ marginTop: 10, padding: 10, borderRadius: 8, border: 'none', background: theme === 'dark' ? '#1976d2' : '#28a745', color: '#fff', width: '100%' }}>Predict Section</button>
+                  {sectionPredictLoading && <div style={{ marginTop: 8, color: theme === 'dark' ? '#ffc107' : '#666' }}>Predicting...</div>}
+                  {sectionPredictResult && <div style={{ marginTop: 8, color: theme === 'dark' ? '#bfe0ff' : '#1976d2' }}>{sectionPredictResult}</div>}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ padding: 16, borderRadius: 12, background: theme === 'dark' ? '#23272f' : '#f8f9fb', border: theme === 'dark' ? '1px solid #2c313a' : '1px solid #e6eef8' }}>
+                  <NearestPoliceStation />
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
-        {/* Persistent PDF download section */}
-        <div className="pdf-download" style={{marginTop:24, padding:16, border:'1px solid #e6eef8', borderRadius:8, background:'#f8f9fb'}}>
-          <h3>Download FIR PDF</h3>
-          <div className="small">You can download/print the FIR PDF for the last saved FIR at any time.</div>
-          <button className="button" onClick={handleDownloadPdf} disabled={!firId}>Download/Print FIR PDF</button>
-          {!firId && <div className="small" style={{color:'#888', marginTop:8}}>Save a FIR first to enable PDF download.</div>}
-        </div>
-        {/* Section prediction feature (always visible below PDF download) */}
-        <div className="section-predict" style={{marginTop:24, padding:16, border:'1px solid #e6eef8', borderRadius:8, background:'#f8f9fb'}}>
-          <h3>Predict Section Number (BNS)</h3>
-          <div className="small">Enter the first information contents below to predict the relevant BNS section number(s).</div>
-          <input
-            type="text"
-            value={sectionPredictText}
-            onChange={e => setSectionPredictText(e.target.value)}
-            placeholder="Type firstInformationContents here..."
-            style={{width:"100%", padding:10, borderRadius:8, border:"1px solid #e6eef8", marginTop:8}}
-          />
-          <button className="button" style={{marginTop:8}} onClick={handlePredictSection} disabled={!sectionPredictText.trim()}>Predict Section</button>
-          {sectionPredictLoading && <div className="small" style={{marginTop:8}}>Predicting...</div>}
-          {sectionPredictResult && (
-            <div className="small" style={{marginTop:8}}>
-              <b>Predicted Section(s):</b> {sectionPredictResult}
-            </div>
-          )}
-          {sectionPredictError && <div className="small" style={{marginTop:8, color:"red"}}>{sectionPredictError}</div>}
-        </div>
-
-        {/* Nearest Police Station Detector */}
-        <NearestPoliceStation />
       </div>
-
-      {/* <div className="preview" style={{flex:1}}>
-        <h3>Preview — Current FIR object (editable via steps)</h3>
-        <pre style={{whiteSpace:"pre-wrap", fontSize:13, background:'#f8f9fb', padding:12, borderRadius:8}}>{JSON.stringify(state, null, 2)}</pre>
-      </div> */}
-    </div>
+    </ThemeContext.Provider>
   );
 }
